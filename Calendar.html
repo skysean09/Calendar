@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Notion Advanced Calendar</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
+
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #232323;
+      --sub-text-color: #8a8a8a;
+      --today-bg: #E11D48;
+      --today-text: #ffffff;
+      --hover-bg: #f0f0f0;
+      --border-color: #e3e4e8;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #191919;
+        --text-color: #e3e4e8;
+        --sub-text-color: #707070;
+        --today-bg: #E11D48;
+        --today-text: #ffffff;
+        --hover-bg: #252525;
+        --border-color: #303030;
+      }
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      user-select: none;
+      font-family: 'Black Han Sans', sans-serif;
+      transition: background-color 0.3s ease;
+    }
+
+    /* 컨테이너 쿼리 활성화 및 가변형 크기 지정 */
+    .calendar-container {
+      width: 100%;
+      height: 100%;
+      container-type: size;
+      box-sizing: border-box;
+      padding: 4cqh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .calendar-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4cqh;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--text-color);
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 6cqh;
+      cursor: pointer;
+      padding: 0 2cqw;
+      transition: transform 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .calendar-title {
+      font-size: 6.5cqh;
+      color: var(--text-color);
+      letter-spacing: 0.2cqh;
+      text-transform: uppercase;
+    }
+
+    .calendar-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      row-gap: 1.5cqh;
+      column-gap: 1.5cqw;
+      text-align: center;
+    }
+
+    .weekday {
+      font-size: 3.2cqh;
+      color: var(--sub-text-color);
+      letter-spacing: 0.1cqh;
+      padding-bottom: 1cqh;
+    }
+    .weekday:first-child { color: #E11D48; }
+    .weekday:last-child { color: #4D71FF; }
+
+    .day-cell {
+      position: relative;
+      font-size: 4.5cqh;
+      color: var(--text-color);
+      height: 10cqh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .day-number {
+      width: 8.5cqh;
+      height: 8.5cqh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      box-sizing: border-box;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .day-cell:not(.empty) {
+      cursor: pointer;
+    }
+
+    .day-cell:not(.empty):hover .day-number {
+      transform: scale(1.12);
+      background-color: var(--hover-bg);
+    }
+
+    .day-cell.today .day-number {
+      background-color: var(--today-bg);
+      color: var(--today-text);
+    }
+    .day-cell.today:hover .day-number {
+      background-color: var(--today-bg);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <button class="nav-btn" id="prev-btn">&lt;</button>
+      <div class="calendar-title" id="calendar-title">MONTH YEAR</div>
+      <button class="nav-btn" id="next-btn">&gt;</button>
+    </div>
+
+    <div class="calendar-grid" id="calendar-grid">
+      <div class="weekday">SUN</div>
+      <div class="weekday">MON</div>
+      <div class="weekday">TUE</div>
+      <div class="weekday">WED</div>
+      <div class="weekday">THU</div>
+      <div class="weekday">FRI</div>
+      <div class="weekday">SAT</div>
+    </div>
+  </div>
+
+  <script>
+    let targetDate = new Date();
+
+    function buildCalendar() {
+      const currentYear = targetDate.getFullYear();
+      const currentMonth = targetDate.getMonth();
+      
+      const now = new Date();
+      const realYear = now.getFullYear();
+      const realMonth = now.getMonth();
+      const realToday = now.getDate();
+
+      const monthNames = [
+        "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+        "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+      ];
+      document.getElementById('calendar-title').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+      const gridContainer = document.getElementById('calendar-grid');
+      const currentCells = gridContainer.querySelectorAll('.day-cell');
+      currentCells.forEach(cell => cell.remove());
+
+      const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+      const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      for (let i = 0; i < firstDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.classList.add('day-cell', 'empty');
+        gridContainer.appendChild(emptyCell);
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.classList.add('day-cell');
+
+        const dayNumber = document.createElement('div');
+        dayNumber.classList.add('day-number');
+        dayNumber.textContent = day;
+        dayCell.appendChild(dayNumber);
+
+        if (currentYear === realYear && currentMonth === realMonth && day === realToday) {
+          dayCell.classList.add('today');
+        }
+
+        gridContainer.appendChild(dayCell);
+      }
+    }
+
+    function setupEvents() {
+      document.getElementById('prev-btn').addEventListener('click', () => {
+        targetDate.setMonth(targetDate.getMonth() - 1);
+        buildCalendar();
+      });
+
+      document.getElementById('next-btn').addEventListener('click', () => {
+        targetDate.setMonth(targetDate.getMonth() + 1);
+        buildCalendar();
+      });
+    }
+
+    function init() {
+      buildCalendar();
+      setupEvents();
+      setInterval(buildCalendar, 60000 * 30);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
